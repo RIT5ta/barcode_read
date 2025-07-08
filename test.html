@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Quaggaでバーコード読み取り</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+  <style>
+    #interactive {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+      border: 1px solid #ccc;
+    }
+    #result {
+      font-size: 1.2em;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>バーコード読み取り（QuaggaJS）</h1>
+  <div id="interactive" class="viewport"></div>
+  <div id="result">バーコードを読み取ってください</div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+        document.getElementById('result').textContent = 'カメラの使用がサポートされていません。';
+        return;
+      }
+
+      Quagga.init({
+        inputStream: {
+          type: "LiveStream",
+          target: document.querySelector('#interactive'),
+          constraints: {
+            facingMode: "environment" // 背面カメラ
+          }
+        },
+        decoder: {
+          readers: [
+            "code_128_reader", // よく使われるバーコードタイプ
+            "ean_reader",
+            "ean_8_reader",
+            "upc_reader",
+            "upc_e_reader",
+            "code_39_reader"
+          ]
+        },
+        locate: true
+      }, function (err) {
+        if (err) {
+          console.log(err);
+          document.getElementById('result').textContent = '初期化エラー: ' + err;
+          return;
+        }
+        Quagga.start();
+      });
+
+      Quagga.onDetected(function (data) {
+        const code = data.codeResult.code;
+        document.getElementById('result').textContent = '読み取り成功: ' + code;
+        // 連続読み取りを避けるには stop() を呼ぶ
+        Quagga.stop();
+      });
+    });
+  </script>
+</body>
+</html>
